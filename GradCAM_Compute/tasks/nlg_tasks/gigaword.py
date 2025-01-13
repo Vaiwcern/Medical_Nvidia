@@ -16,7 +16,7 @@ from fairseq.data import encoders
 from tasks.ofa_task import OFATask, OFAConfig
 from data.nlg_data.summary_dataset import SummaryDataset
 from data.file_dataset import FileDataset
-from datasets import load_metric
+import evaluate
 
 logger = logging.getLogger(__name__)
 
@@ -186,7 +186,7 @@ class GigawordTask(OFATask):
             self.sequence_generator = self.build_generator(
                 [model], Namespace(**gen_args)
             )
-            self.metric = load_metric('../../utils/rouge.py')
+            self.metric = evaluate.load('../../utils/rouge.py')
 
         return model
 

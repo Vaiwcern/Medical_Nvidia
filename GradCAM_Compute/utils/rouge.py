@@ -22,6 +22,7 @@ import six  # Here to have a nice missing dependency error message early on
 from rouge_score import rouge_scorer, scoring
 
 import datasets
+import evaluate
 
 
 _CITATION = """\
@@ -68,7 +69,7 @@ Returns:
     rougeL: rouge_l (precision, recall, f1),
     rougeLsum: rouge_lsum (precision, recall, f1)
 Examples:
-    >>> rouge = datasets.load_metric('rouge')
+    >>> rouge = evaluate.load('rouge')
     >>> predictions = ["hello there", "general kenobi"]
     >>> references = ["hello there", "general kenobi"]
     >>> results = rouge.compute(predictions=predictions, references=references)

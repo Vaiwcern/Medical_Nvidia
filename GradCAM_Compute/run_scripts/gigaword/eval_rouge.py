@@ -1,8 +1,9 @@
 import datasets
 import sys
 import json
+import evaluate
 
-rouge = datasets.load_metric('../../utils/rouge.py')
+rouge = evaluate.load('../../utils/rouge.py')
 
 if __name__ == "__main__":
     f = sys.argv[1]
