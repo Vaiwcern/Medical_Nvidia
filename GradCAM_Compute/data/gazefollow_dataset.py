@@ -55,6 +55,8 @@ class GazeFollow_body_head(Dataset):
         head_box = np.array([x_min, y_min, x_max,y_max])
         
         body_box = row[['body_x1', 'body_y1', 'body_x2', 'body_y2']].values
+        if np.any(np.isnan(body_box)):
+            body_box = np.nan_to_num(body_box, nan=0)
         body_box = body_box.astype(int)
         
         detected = 1
