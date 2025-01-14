@@ -12,6 +12,7 @@ import spacy
 from tqdm import tqdm
 from torch.utils.data import DataLoader
 from data.gazefollow_dataset import GazeFollow_body_head
+from data.vqa_rad_dataset import VqaRadDataset
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
 from fairseq import utils, tasks
@@ -69,7 +70,7 @@ def plt_person(img, new_box, save_path, plot_dpi = 80, color=(0,1,0)):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Generate gradcam for GazeFollow')
-    parser.add_argument('--base_dir', type=str, default='/home/ltnghia02/testing/VQA-RAD')
+    parser.add_argument('--base_dir', type=str, default='/home/ltnghia02/testing/gaze_follow')
     parser.add_argument('--vqa_weights', type=str, default='/home/ltnghia02/testing/ofa_large.pt')
     parser.add_argument('--vis_gradcam', action='store_true')
     parser.add_argument('--save_folder', type=str, default='gradcam_gazefollow')
@@ -127,7 +128,7 @@ if __name__=='__main__':
     pad_idx = task.src_dict.pad()
     utils_obj = Utils_Obj(task, generator, patch_resize_transform)
 
-    dataset = GazeFollow_body_head(gf_data_dir, test=args.test)
+    dataset = VqaRadDataset(os.path.join(gf_data_dir, "VQA_RAD Dataset Public.xlsx"), os.path.join(gf_data_dir, "VQA_RAD Image Folder"))
     if args.sample_num>0:
         sample_idx = random.sample(list(range(len(dataset))), args.sample_num)
         dataset = torch.utils.data.Subset(dataset, sample_idx)    
@@ -142,83 +143,88 @@ if __name__=='__main__':
     data_save = {}
     try:
         for idx, data in enumerate(tqdm(dataloader)):
-            img_path, eye_x, body_box, head_box, inout, detected = data
-            img_path, body_box, head_box = img_path[0], body_box[0].numpy(), head_box[0].numpy()
-            eye_x = eye_x[0].item()
+            img_path, question = data
+            img_path = img_path[0]
+            question = question[0]
+            
             imgpath = os.path.split(img_path)[-1]
             imgname = imgpath.split('.')[0]
             save_path = os.path.join(save_dir, imgpath)
+
             # get gradcam for image
             image = Image.open(img_path)
             img = cv2.imread(img_path)
-            start_pt, end_pt = (body_box[0], body_box[1]), (body_box[2], body_box[3])
-            #start_pt, end_pt = (int(head_box[0]), int(head_box[1])), (int(head_box[2]), int(head_box[3]))
-            cv2.rectangle(img, start_pt, end_pt, (0,255,0), thickness=2)
-            #cv2.imwrite(save_path, img)
-            
+
             # generate gradcam for all, irrespective or in or out
             #image_new = Image.open(save_path)
             image_new = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            if detected[0]:
-                question='What is the person in the green bounding box looking at?'
-                sample, result = utils_obj.get_vqa_result(image_new, question, full_model)
-            else:
-                question='What is the person looking at?'
-                sample, result = utils_obj.get_vqa_result(image, question, full_model)
+            
+            sample, result = utils_obj.get_vqa_result(image, question, full_model)
                 
             new_result = utils_obj.get_str_from_tokens(result)
-            first_res = new_result[0]
-            first_word = first_res['str'].split()[0]
-            
-            doc = nlp(first_res['str'].strip()) 
-            all_steps = []
-            for token_idx, token in enumerate(doc):
-                if token.pos_.lower()=='noun' or token.pos_.lower()=='propn' or token.pos_.lower()=='pron':
-                    all_steps.append(token_idx)
-                else:
-                    if len(all_steps)>0:
-                        # select the first noun (or noun phrase): allow continuous nouns, but if another type jumps in, then stop
-                        break
-            
-            if len(all_steps)==0:
-                gradcam_step = len(first_res['tokens']) - 2
-            else:
-                gradcam_step = all_steps[-1]  # select the last noun in continuous nouns: e.g. tennis racket
-            print(img_path)
-            print(first_res['str'])
-            print(first_res['tokens'])
-            print(gradcam_step)
-            # get gradcam and visualize
-            for param in gradcam_model.model.encoder.embed_images.parameters():
-                param.requires_grad=False
-            gradcams_allsteps, gradcams_resize_all = [],[] 
-            
-            if gradcam_step > len(first_res['tokens']):
-                gradcam_step = len(first_res['tokens']) - 2
-            # original size: 30
-            gradcams, gradcams_resize  = get_gradcam_on_attweights(result[0], sample, gradcam_model, tgt_layer_idx='all', step=gradcam_step, bos=full_model.bos, eos=full_model.eos, imgout_size=30)
-            gradcams_allsteps.append(gradcams)
-            gradcams_resize_all.append(gradcams_resize)
-            word = doc[min(gradcam_step, len(doc)-1)]
-                
-            save_path = os.path.join(save_dir, f'{imgname}_gradcam.png')
-            if args.vis_gradcam:
-                plot_gradcam_alllayers(image_new, gradcams_resize, save_path, plot_img_size=(224,224))
-                
-            if imgpath not in data_save:
-                data_save[imgpath] = {}
-            data_save[imgpath][eye_x] = {}
-            data_save[imgpath][eye_x]['answer'] = first_res['str']
-            data_save[imgpath][eye_x]['tokens'] = first_res['tokens']
 
-            data_save[imgpath][eye_x]['9th_layer'] = gradcams[-3]
-            data_save[imgpath][eye_x]['10th_layer'] = gradcams[-2]
-            data_save[imgpath][eye_x]['11th_layer'] = gradcams[-1]
+            #----------------------
+
+            print(f"Question: {question}")
+            print(f"Result: {new_result[0]}")
+            print()
+            
+            #----------------------
+
+            # first_res = new_result[0]
+            # first_word = first_res['str'].split()[0]
+            
+            # doc = nlp(first_res['str'].strip()) 
+            # all_steps = []
+            # for token_idx, token in enumerate(doc):
+            #     if token.pos_.lower()=='noun' or token.pos_.lower()=='propn' or token.pos_.lower()=='pron':
+            #         all_steps.append(token_idx)
+            #     else:
+            #         if len(all_steps)>0:
+            #             # select the first noun (or noun phrase): allow continuous nouns, but if another type jumps in, then stop
+            #             break
+            
+            # if len(all_steps)==0:
+            #     gradcam_step = len(first_res['tokens']) - 2
+            # else:
+            #     gradcam_step = all_steps[-1]  # select the last noun in continuous nouns: e.g. tennis racket
+            # print(img_path)
+            # print(first_res['str'])
+            # print(first_res['tokens'])
+            # print(gradcam_step)
+            # # get gradcam and visualize
+            # for param in gradcam_model.model.encoder.embed_images.parameters():
+            #     param.requires_grad=False
+            # gradcams_allsteps, gradcams_resize_all = [],[] 
+            
+            # if gradcam_step > len(first_res['tokens']):
+            #     gradcam_step = len(first_res['tokens']) - 2
+            # # original size: 30
+            # gradcams, gradcams_resize  = get_gradcam_on_attweights(result[0], sample, gradcam_model, tgt_layer_idx='all', step=gradcam_step, bos=full_model.bos, eos=full_model.eos, imgout_size=30)
+            # gradcams_allsteps.append(gradcams)
+            # gradcams_resize_all.append(gradcams_resize)
+            # word = doc[min(gradcam_step, len(doc)-1)]
+                
+            # save_path = os.path.join(save_dir, f'{imgname}_gradcam.png')
+            # if args.vis_gradcam:
+            #     plot_gradcam_alllayers(image_new, gradcams_resize, save_path, plot_img_size=(224,224))
+                
+            #----------------------------------------------------
+            
+            # if imgpath not in data_save:
+            #     data_save[imgpath] = {}
+            # data_save[imgpath][eye_x] = {}
+            # data_save[imgpath][eye_x]['answer'] = first_res['str']
+            # data_save[imgpath][eye_x]['tokens'] = first_res['tokens']
+
+            # data_save[imgpath][eye_x]['9th_layer'] = gradcams[-3]
+            # data_save[imgpath][eye_x]['10th_layer'] = gradcams[-2]
+            # data_save[imgpath][eye_x]['11th_layer'] = gradcams[-1]
         
-        if args.sample_num == -1:
-            # entire dataset
-            with open(os.path.join(save_dir, "gradcams_train_person.pkl"), 'wb') as file:
-                pickle.dump(data_save, file)
+        # if args.sample_num == -1:
+        #     # entire dataset
+        #     with open(os.path.join(save_dir, "gradcams_train_person.pkl"), 'wb') as file:
+        #         pickle.dump(data_save, file)
             
     except Exception: 
         print(traceback.format_exc())
