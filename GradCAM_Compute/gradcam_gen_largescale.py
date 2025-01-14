@@ -168,7 +168,6 @@ if __name__=='__main__':
                 
             new_result = utils_obj.get_str_from_tokens(result)
             first_res = new_result[0]
-            first_word = first_res['str'].split()[0]
             
             doc = nlp(first_res['str'].strip()) 
             all_steps = []

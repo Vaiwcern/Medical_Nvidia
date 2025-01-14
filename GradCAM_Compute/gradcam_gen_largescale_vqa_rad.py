@@ -171,43 +171,45 @@ if __name__=='__main__':
             
             #----------------------
 
-            # first_res = new_result[0]
+            first_res = new_result[0]
             # first_word = first_res['str'].split()[0]
             
-            # doc = nlp(first_res['str'].strip()) 
-            # all_steps = []
-            # for token_idx, token in enumerate(doc):
-            #     if token.pos_.lower()=='noun' or token.pos_.lower()=='propn' or token.pos_.lower()=='pron':
-            #         all_steps.append(token_idx)
-            #     else:
-            #         if len(all_steps)>0:
-            #             # select the first noun (or noun phrase): allow continuous nouns, but if another type jumps in, then stop
-            #             break
+            position_words = ['left', 'right', 'above', 'under', 'middle', 'top', 'bottom', 'center', 'near', 'far', 'inside', 'outside']
+            doc = nlp(first_res['str'].strip()) 
+            all_steps = []
+            for token_idx, token in enumerate(doc):
+                if token.text.lower() in position_words:
+                    selected_id = token_idx
+                    break  # Dừng lại sau khi tìm được từ chỉ vị trí đầu tiên
+                elif selected_id is None and token.pos_ == 'NOUN':  # Nếu chưa tìm thấy vị trí, chọn danh từ đầu tiên
+                    selected_id = token_idx
+
             
-            # if len(all_steps)==0:
-            #     gradcam_step = len(first_res['tokens']) - 2
-            # else:
-            #     gradcam_step = all_steps[-1]  # select the last noun in continuous nouns: e.g. tennis racket
-            # print(img_path)
-            # print(first_res['str'])
-            # print(first_res['tokens'])
-            # print(gradcam_step)
+            if selected_id is None:
+                gradcam_step = len(first_res['tokens']) - 2
+            else: 
+                gradcam_step = selected_id
+            
+            print(img_path)
+            print(first_res['str'])
+            print(first_res['tokens'])
+            print(gradcam_step)
             # # get gradcam and visualize
-            # for param in gradcam_model.model.encoder.embed_images.parameters():
-            #     param.requires_grad=False
-            # gradcams_allsteps, gradcams_resize_all = [],[] 
+            for param in gradcam_model.model.encoder.embed_images.parameters():
+                param.requires_grad=False
+            gradcams_allsteps, gradcams_resize_all = [],[] 
             
-            # if gradcam_step > len(first_res['tokens']):
-            #     gradcam_step = len(first_res['tokens']) - 2
+            if gradcam_step > len(first_res['tokens']):
+                gradcam_step = len(first_res['tokens']) - 2
             # # original size: 30
-            # gradcams, gradcams_resize  = get_gradcam_on_attweights(result[0], sample, gradcam_model, tgt_layer_idx='all', step=gradcam_step, bos=full_model.bos, eos=full_model.eos, imgout_size=30)
-            # gradcams_allsteps.append(gradcams)
-            # gradcams_resize_all.append(gradcams_resize)
-            # word = doc[min(gradcam_step, len(doc)-1)]
+            gradcams, gradcams_resize  = get_gradcam_on_attweights(result[0], sample, gradcam_model, tgt_layer_idx='all', step=gradcam_step, bos=full_model.bos, eos=full_model.eos, imgout_size=30)
+            gradcams_allsteps.append(gradcams)
+            gradcams_resize_all.append(gradcams_resize)
+            word = doc[min(gradcam_step, len(doc)-1)]
                 
-            # save_path = os.path.join(save_dir, f'{imgname}_gradcam.png')
-            # if args.vis_gradcam:
-            #     plot_gradcam_alllayers(image_new, gradcams_resize, save_path, plot_img_size=(224,224))
+            save_path = os.path.join(save_dir, f'{imgname}_gradcam.png')
+            if args.vis_gradcam:
+                plot_gradcam_alllayers(image_new, gradcams_resize, save_path, plot_img_size=(224,224))
                 
             #----------------------------------------------------
             
