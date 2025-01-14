@@ -211,7 +211,7 @@ if __name__=='__main__':
             gradcams_resize_all.append(gradcams_resize)
             word = doc[min(gradcam_step, len(doc)-1)]
                 
-            save_path = os.path.join(save_dir, f'{imgname}_gradcam.png')
+            save_path = os.path.join(save_dir, f'{imgname}_{question}_{new_result[0]}.png')
             if args.vis_gradcam:
                 plot_gradcam_alllayers(image_new, gradcams_resize, save_path, plot_img_size=(224,224))
                 
