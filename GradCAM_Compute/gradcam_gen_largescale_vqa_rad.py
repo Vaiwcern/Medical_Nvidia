@@ -79,6 +79,9 @@ if __name__=='__main__':
     args = parser.parse_args()
     gf_data_dir = args.base_dir
 
+    # import os
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    
     tasks.register_task('vqa_gen',VqaGenTask)
     # turn on cuda if GPU is available
     use_cuda = torch.cuda.is_available()
