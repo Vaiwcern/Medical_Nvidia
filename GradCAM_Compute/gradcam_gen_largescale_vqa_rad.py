@@ -177,6 +177,7 @@ if __name__=='__main__':
             position_words = ['left', 'right', 'above', 'under', 'middle', 'top', 'bottom', 'center', 'near', 'far', 'inside', 'outside']
             doc = nlp(first_res['str'].strip()) 
             all_steps = []
+            selected_token = None
             for token_idx, token in enumerate(doc):
                 if token.text.lower() in position_words:
                     selected_id = token_idx
