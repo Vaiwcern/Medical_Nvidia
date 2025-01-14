@@ -73,7 +73,7 @@ if __name__=='__main__':
     parser.add_argument('--base_dir', type=str, default='/home/ltnghia02/testing/VQA-RAD')
     parser.add_argument('--vqa_weights', type=str, default='/home/ltnghia02/testing/ofa_large.pt')
     parser.add_argument('--vis_gradcam', action='store_true')
-    parser.add_argument('--save_folder', type=str, default='gradcam_gazefollow')
+    parser.add_argument('--save_folder', type=str, default='gradcam_VQA-RAD')
     parser.add_argument('--sample_num', type=int, default=-1)
     parser.add_argument('--test', action='store_true')
     args = parser.parse_args()
