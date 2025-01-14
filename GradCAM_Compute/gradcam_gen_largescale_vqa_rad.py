@@ -70,7 +70,7 @@ def plt_person(img, new_box, save_path, plot_dpi = 80, color=(0,1,0)):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Generate gradcam for GazeFollow')
-    parser.add_argument('--base_dir', type=str, default='/home/ltnghia02/testing/gaze_follow')
+    parser.add_argument('--base_dir', type=str, default='/home/ltnghia02/testing/VQA-RAD')
     parser.add_argument('--vqa_weights', type=str, default='/home/ltnghia02/testing/ofa_large.pt')
     parser.add_argument('--vis_gradcam', action='store_true')
     parser.add_argument('--save_folder', type=str, default='gradcam_gazefollow')
