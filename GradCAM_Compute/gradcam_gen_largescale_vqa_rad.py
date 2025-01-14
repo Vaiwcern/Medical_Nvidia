@@ -156,7 +156,7 @@ if __name__=='__main__':
             img = cv2.imread(img_path)
 
             # generate gradcam for all, irrespective or in or out
-            #image_new = Image.open(save_path)
+            # image_new = Image.open(save_path)
             image_new = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
             
             sample, result = utils_obj.get_vqa_result(image, question, full_model)
@@ -177,7 +177,7 @@ if __name__=='__main__':
             position_words = ['left', 'right', 'above', 'under', 'middle', 'top', 'bottom', 'center', 'near', 'far', 'inside', 'outside']
             doc = nlp(first_res['str'].strip()) 
             all_steps = []
-            selected_token = None
+            selected_id = None
             for token_idx, token in enumerate(doc):
                 if token.text.lower() in position_words:
                     selected_id = token_idx
